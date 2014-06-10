@@ -1293,7 +1293,7 @@ class S3Msg(object):
         access=current.deployment_settings.get_auth_facebook()
         Facebook_App_ID=access["id"]
         Facebook_App_Secret=access["secret"]
-        access_token = facebook.get_app_access_token(Facebook_App_ID, Facebook_App_Secret)
+        access_token = facebook.get_app_access_tokn(Facebook_App_ID, Facebook_App_Secret)
         graph = facebook.GraphAPI(access_token)
         graph.put_wall_post(post)
 
