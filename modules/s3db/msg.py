@@ -38,6 +38,7 @@ __all__ = ["S3ChannelModel",
            "S3SMSOutboundModel",
            "S3TropoModel",
            "S3TwilioModel",
+           "S3FacebookModel"
            "S3TwitterModel",
            "S3TwitterSearchModel",
            "S3XFormsModel",
@@ -81,8 +82,7 @@ class S3ChannelModel(S3Model):
         # Super entity: msg_channel
         #
         channel_types = Storage(msg_email_channel = T("Email (Inbound)"),
-                                # @ToDo:
-                                #msg_facebook_channel = T("Facebook"),
+                                msg_facebook_channel = T("Facebook"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
                                 msg_rss_channel = T("RSS Feed"),
                                 msg_sms_modem_channel = T("SMS Modem"),
@@ -1524,6 +1524,76 @@ class S3TwilioModel(S3ChannelModel):
         # ---------------------------------------------------------------------
         return dict()
 
+# =============================================================================
+class S3FacebookModel(S3Model):
+    
+    names = ["msg_facebook_channel",
+             "msg_facebook"]
+    
+    def model(self):
+        
+        T = current.T
+        db = current.db
+        
+        configure = self.configure
+        define_table = self.define_table
+        set_method = self.set_method
+        
+        # ---------------------------------------------------------------------
+        tablename = "msg_facebook_channel"
+        define_table(tablename,
+                     self.super_link("channel_id", "msg_channel"),
+                     Field("enabled", "boolean",
+                           default = True,
+                           label = T("Enabled?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("access_token", "password"),
+                     Field("access_token_secret", "password"),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.msg_channel_onaccept,
+                  super_entity = "msg_channel",
+                  )
+
+        set_method("msg", "facebook_channel",
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
+
+        set_method("msg", "facebook_channel",
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
+        
+        # ---------------------------------------------------------------------
+        tablename = "msg_facebook"
+        define_table(tablename,
+                     # Instance
+                     self.super_link("message_id", "msg_message"),
+                     self.msg_channel_id(),
+                     s3_datetime(default = "now",
+                                 label = T("Posted on"),
+                                 ),
+                     Field("body", length=140,
+                           label = T("Message"),
+                           ),
+                     Field("msg_id", # Facebook Message ID
+                           readable = False,
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  list_fields = ["id",
+                                 "body",
+                                 "date",
+                                 ],
+                  super_entity = "msg_message",
+                  )
+
+        # ---------------------------------------------------------------------
+        return dict()
+    
 # =============================================================================
 class S3TwitterModel(S3Model):
 
